@@ -32,18 +32,18 @@ public class ParserSpecification {
                 {lexer.tokenize("1+2;"),
                         new Program(
                                 new AddExpression(new Number(1), new Number(2)))},
-                {lexer.tokenize(": x = 2; x*sqrt(8)"),
+                {lexer.tokenize(": x = 2; x*sqrt(8);"),
                         new Program(
                                 new VariableAssignment(new VariableReference("x"), new Number(2)),
                                 new MultiplyExpression(
                                         new VariableReference("x"),
                                         new FunctionCall("sqrt", new Number(8)))
                         )},
-                {lexer.tokenize("1 / 0"),
+                {lexer.tokenize("1 / 0;"),
                         new Program(
                                 new DivideExpression(new Number(1), new Number(0))
                         )},
-                {lexer.tokenize(": x = sqrt(-5); : y = 7; x / y"),
+                {lexer.tokenize(": x = sqrt(-5); : y = 7; x / y;"),
                         new Program(
                                 new VariableAssignment(
                                         new VariableReference("x"),

@@ -7,4 +7,8 @@ public class DivideExpression extends BinaryExpression {
     public DivideExpression(Expression left, Expression right) {
         super(left, right);
     }
+    @Override
+    public String toString() {
+        return "[Divide " + getLeft() + " " + getRight() + "]";
+    }
 }
