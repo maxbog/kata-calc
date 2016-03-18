@@ -1,0 +1,15 @@
+program ::= stmt*
+
+stmt ::= let_stmt | power_expr
+
+let_stmt ::= `:` id `=` power_expr
+
+power_expr = mult_expr (`^` stmt)+
+
+mult_expr ::= add_expr ((`*`|`/`) mult_expr)+
+
+add_expr ::= unary_expr ((`+`|`-`) add_expr)+
+
+unary_expr ::= (`+`|`-`)? atom |
+
+atom ::= number | id | `(` power_expr `)` | id `(` power_expr `)`
