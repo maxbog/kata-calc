@@ -1,8 +1,8 @@
-package calc.Ast;
+package calc.ast;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
-public class Statement {
+public interface Statement extends Ast {
 
 }

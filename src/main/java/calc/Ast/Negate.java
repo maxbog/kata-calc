@@ -1,11 +1,12 @@
-package calc.Ast;
+package calc.ast;
 
+import java.math.BigInteger;
 import java.util.Objects;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
-public class Negate extends Expression {
+public class Negate implements Expression {
     private Expression expression;
 
     public Negate(Expression expression) {
@@ -29,5 +30,15 @@ public class Negate extends Expression {
     @Override
     public int hashCode() {
         return Objects.hash(expression);
+    }
+
+    @Override
+    public BigInteger computeValue() {
+        BigInteger computed = expression.computeValue();
+        if(computed == null) {
+            return null;
+        }
+
+        return computed.negate();
     }
 }

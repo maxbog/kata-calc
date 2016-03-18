@@ -1,5 +1,6 @@
 package calc;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,14 +59,14 @@ public class Tokenizer {
         return currentIdentifier;
     }
 
-    private int tokenizeSingleNumber(TokenizerState state) {
+    private BigInteger tokenizeSingleNumber(TokenizerState state) {
         String currentNumber = "";
 
         while(!state.eol() && Character.isDigit(state.currentChar())) {
             currentNumber += state.currentChar();
             state.advance();
         }
-        return Integer.valueOf(currentNumber);
+        return new BigInteger(currentNumber);
     }
 
     private class TokenizerState {

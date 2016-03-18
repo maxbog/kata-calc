@@ -1,11 +1,11 @@
-package calc.Ast;
+package calc.ast;
 
 import java.util.Objects;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
-public class BinaryExpression extends Expression{
+public abstract class BinaryExpression implements Expression{
     private final Expression left;
     private final Expression right;
 

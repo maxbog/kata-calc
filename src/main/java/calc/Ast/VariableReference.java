@@ -1,11 +1,12 @@
-package calc.Ast;
+package calc.ast;
 
+import java.math.BigInteger;
 import java.util.Objects;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
-public class VariableReference extends Expression {
+public class VariableReference implements Expression {
     private String variableName;
 
     public VariableReference(String variableName) {
@@ -29,5 +30,10 @@ public class VariableReference extends Expression {
     @Override
     public int hashCode() {
         return Objects.hash(variableName);
+    }
+
+    @Override
+    public BigInteger computeValue() {
+        return null;
     }
 }

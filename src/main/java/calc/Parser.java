@@ -1,8 +1,9 @@
 package calc;
 
-import calc.Ast.*;
-import calc.Ast.Number;
+import calc.ast.*;
+import calc.ast.NumberExpression;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -159,7 +160,7 @@ public class Parser {
 
     private Expression parseAtom(TokenSource source) {
         if(!source.eol() && source.current().getType() == TokenType.Number) {
-            return new Number(source.matchNumber());
+            return new NumberExpression(source.matchNumber());
         }
 
         if(!source.eol() && source.current().getType() == TokenType.Identifier) {
@@ -257,7 +258,7 @@ public class Parser {
             return null;
         }
 
-        public Integer matchNumber() {
+        public BigInteger matchNumber() {
             if(eol())
                 return null;
             Token current = current();

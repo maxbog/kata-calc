@@ -1,11 +1,12 @@
-package calc.Ast;
+package calc.ast;
 
+import java.math.BigInteger;
 import java.util.Objects;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
-public class FunctionCall extends Expression {
+public class FunctionCall implements Expression {
     private final String functionName;
     private final Expression argument;
 
@@ -32,5 +33,10 @@ public class FunctionCall extends Expression {
     @Override
     public int hashCode() {
         return Objects.hash(functionName, argument);
+    }
+
+    @Override
+    public BigInteger computeValue() {
+        return null;
     }
 }

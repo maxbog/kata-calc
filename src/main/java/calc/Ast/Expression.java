@@ -1,7 +1,10 @@
-package calc.Ast;
+package calc.ast;
+
+import java.math.BigInteger;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
-public class Expression extends Statement {
+public interface Expression extends Statement {
+    BigInteger computeValue();
 }

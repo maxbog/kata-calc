@@ -1,11 +1,11 @@
-package calc.Ast;
+package calc.ast;
 
 import java.util.Objects;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
-public class VariableAssignment extends Statement {
+public class VariableAssignment implements Statement {
     private final VariableReference variableReference;
     private final Expression value;
 

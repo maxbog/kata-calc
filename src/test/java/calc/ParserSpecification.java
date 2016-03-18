@@ -1,7 +1,7 @@
 package calc;
 
-import calc.Ast.*;
-import calc.Ast.Number;
+import calc.ast.*;
+import calc.ast.NumberExpression;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -31,40 +31,40 @@ public class ParserSpecification {
         return new Object[][] {
                 {lexer.tokenize("1+2;"),
                         new Program(
-                                new AddExpression(new Number(1), new Number(2)))},
+                                new AddExpression(new NumberExpression(1), new NumberExpression(2)))},
                 {lexer.tokenize(": x = 2; x*sqrt(8);"),
                         new Program(
-                                new VariableAssignment(new VariableReference("x"), new Number(2)),
+                                new VariableAssignment(new VariableReference("x"), new NumberExpression(2)),
                                 new MultiplyExpression(
                                         new VariableReference("x"),
-                                        new FunctionCall("sqrt", new Number(8)))
+                                        new FunctionCall("sqrt", new NumberExpression(8)))
                         )},
                 {lexer.tokenize("1 / 0;"),
                         new Program(
-                                new DivideExpression(new Number(1), new Number(0))
+                                new DivideExpression(new NumberExpression(1), new NumberExpression(0))
                         )},
                 {lexer.tokenize(": x = sqrt(-5); : y = 7; x / y;"),
                         new Program(
                                 new VariableAssignment(
                                         new VariableReference("x"),
                                         new FunctionCall("sqrt",
-                                                new Negate(new Number(5)))),
+                                                new Negate(new NumberExpression(5)))),
                                 new VariableAssignment(
                                         new VariableReference("y"),
-                                        new Number(7)),
+                                        new NumberExpression(7)),
                                 new DivideExpression(new VariableReference("x"), new VariableReference("y"))
                         )},
                 {lexer.tokenize("1 + 2*3 - 4 * 5 / 6^7^8 ;"),
                         new Program(
                                 new SubtractExpression(
                                         new AddExpression(
-                                                new Number(1),
-                                                new MultiplyExpression(new Number(2), new Number(3))
+                                                new NumberExpression(1),
+                                                new MultiplyExpression(new NumberExpression(2), new NumberExpression(3))
                                         ),
                                         new DivideExpression(
-                                                new MultiplyExpression(new Number(4), new Number(5)),
-                                                new PowerExpression(new Number(6),
-                                                        new PowerExpression(new Number(7), new Number(8)))
+                                                new MultiplyExpression(new NumberExpression(4), new NumberExpression(5)),
+                                                new PowerExpression(new NumberExpression(6),
+                                                        new PowerExpression(new NumberExpression(7), new NumberExpression(8)))
                                         )
                                 )
                         )},

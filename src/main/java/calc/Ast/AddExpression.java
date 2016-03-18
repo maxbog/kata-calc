@@ -1,6 +1,6 @@
-package calc.Ast;
+package calc.ast;
 
-import calc.Operator;
+import java.math.BigInteger;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
@@ -14,5 +14,14 @@ public class AddExpression extends BinaryExpression {
     @Override
     public String toString() {
         return "[Add " + getLeft() + " " + getRight() + "]";
+    }
+
+    @Override
+    public BigInteger computeValue() {
+        BigInteger leftValue = getLeft().computeValue();
+        BigInteger rightValue = getRight().computeValue();
+        if(leftValue == null || rightValue == null)
+            return null;
+        return leftValue.add(rightValue);
     }
 }

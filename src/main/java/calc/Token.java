@@ -1,5 +1,6 @@
 package calc;
 
+import java.math.BigInteger;
 import java.util.Objects;
 
 /**
@@ -8,7 +9,7 @@ import java.util.Objects;
 public class Token {
     private final String identifierName;
     private final TokenType type;
-    private final int numberValue;
+    private final BigInteger numberValue;
     private final Operator operatorValue;
 
     private Token(Operator operator) {
@@ -16,10 +17,10 @@ public class Token {
 
         this.operatorValue = operator;
         this.identifierName = null;
-        this.numberValue = 0;
+        this.numberValue = null;
     }
 
-    private Token(int intValue) {
+    private Token(BigInteger intValue) {
         this.type = TokenType.Number;
 
         this.operatorValue = null;
@@ -32,20 +33,23 @@ public class Token {
 
         this.operatorValue = null;
         this.identifierName = identifierName;
-        this.numberValue = 0;
+        this.numberValue = null;
     }
 
     public TokenType getType() {
         return type;
     }
 
-    public int numberValue() { return numberValue;}
+    public BigInteger numberValue() { return numberValue;}
 
     public Operator operatorValue() { return operatorValue;}
 
 
-    public static Token ofNumber(int numberValue) {
+    public static Token ofNumber(BigInteger numberValue) {
         return new Token(numberValue);
+    }
+    public static Token ofNumber(int numberValue) {
+        return new Token(BigInteger.valueOf(numberValue));
     }
 
     @Override
@@ -53,7 +57,7 @@ public class Token {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Token token = (Token) o;
-        return numberValue == token.numberValue &&
+        return Objects.equals(numberValue, token.numberValue) &&
                 type == token.type &&
                 operatorValue == token.operatorValue &&
                 Objects.equals(identifierName, token.identifierName);

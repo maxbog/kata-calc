@@ -1,4 +1,4 @@
-package calc.Ast;
+package calc.ast;
 
 import java.util.Arrays;
 import java.util.List;
