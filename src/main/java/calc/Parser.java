@@ -33,7 +33,7 @@ public class Parser {
         if(!source.eol() && source.current().equals(Token.ofOperator(Operator.Let))) {
             parsedStatement =parseLetExpression(source);
         } else {
-            parsedStatement = parseMultExpression(source);
+            parsedStatement = parseAddExpression(source);
         }
 
         if(parsedStatement == null)
@@ -57,7 +57,7 @@ public class Parser {
         if(!source.match(Token.ofOperator(Operator.Assign)))
             return null;
 
-        Expression expr = parseMultExpression(source);
+        Expression expr = parseAddExpression(source);
 
         if(expr == null)
             return null;
@@ -66,13 +66,13 @@ public class Parser {
     }
 
     private Expression parseMultExpression(TokenSource source) {
-        Expression topLevelExpression = parseAddExpression(source);
+        Expression topLevelExpression = parsePowerExpression(source);
         if(topLevelExpression == null)
             return null;
 
         while (!source.eol() && isMultiplicativeOperator(source.current())) {
             Operator oper = source.matchOperator();
-            Expression nextExpr = parseMultExpression(source);
+            Expression nextExpr = parsePowerExpression(source);
             if(nextExpr == null)
                 return null;
             topLevelExpression = createBinaryExpression(oper, topLevelExpression, nextExpr);
@@ -103,7 +103,7 @@ public class Parser {
     }
 
     private Expression parseAddExpression(TokenSource source) {
-        Expression topLevelExpression = parsePowerExpression(source);
+        Expression topLevelExpression = parseMultExpression(source);
         if(topLevelExpression == null)
             return null;
 
@@ -128,7 +128,7 @@ public class Parser {
 
         while (!source.eol() && isPowerOperator(source.current())) {
             source.matchOperator();
-            Expression nextExpr = parseMultExpression(source);
+            Expression nextExpr = parseUnaryExpression(source);
             if(nextExpr == null)
                 return null;
             exprStack.push(nextExpr);
@@ -168,7 +168,7 @@ public class Parser {
             if(!source.eol() && source.current().equals(Token.ofOperator(Operator.LeftParen))) {
                 source.match(Token.ofOperator(Operator.LeftParen));
 
-                Expression argument = parseMultExpression(source);
+                Expression argument = parseAddExpression(source);
 
                 if(argument == null)
                     return null;
@@ -185,7 +185,7 @@ public class Parser {
         if(!source.eol() && source.current().equals(Token.ofOperator(Operator.LeftParen))) {
             source.match(Token.ofOperator(Operator.LeftParen));
 
-            Expression innerExpression = parseMultExpression(source);
+            Expression innerExpression = parseAddExpression(source);
 
             if(innerExpression == null)
                 return null;

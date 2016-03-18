@@ -1,15 +1,15 @@
 program ::= stmt*
 
-stmt ::= let_stmt `;` | mult_expr `;`
+stmt ::= let_stmt `;` | add_expr `;`
 
-let_stmt ::= `:` id `=` mult_expr
+let_stmt ::= `:` id `=` add_expr
 
-mult_expr ::= add_expr ((`*`|`/`) mult_expr)+
+add_expr ::= mult_expr ((`+`|`-`) mult_expr)+
 
-add_expr ::= power_expr ((`+`|`-`) mult_expr)+
+mult_expr ::= power_expr ((`*`|`/`) power_expr)+
 
-power_expr = unary_expr (`^` mult_expr)+
+power_expr = unary_expr (`^` unary_expr)+
 
 unary_expr ::= (`+`|`-`)? atom |
 
-atom ::= number | id | `(` mult_expr `)` | id `(` mult_expr `)`
+atom ::= number | id | `(` add_expr `)` | id `(` add_expr `)`

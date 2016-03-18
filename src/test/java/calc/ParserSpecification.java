@@ -54,6 +54,20 @@ public class ParserSpecification {
                                         new Number(7)),
                                 new DivideExpression(new VariableReference("x"), new VariableReference("y"))
                         )},
+                {lexer.tokenize("1 + 2*3 - 4 * 5 / 6^7^8 ;"),
+                        new Program(
+                                new SubtractExpression(
+                                        new AddExpression(
+                                                new Number(1),
+                                                new MultiplyExpression(new Number(2), new Number(3))
+                                        ),
+                                        new DivideExpression(
+                                                new MultiplyExpression(new Number(4), new Number(5)),
+                                                new PowerExpression(new Number(6),
+                                                        new PowerExpression(new Number(7), new Number(8)))
+                                        )
+                                )
+                        )},
         };
     }
 }
