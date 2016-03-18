@@ -6,6 +6,7 @@ import org.testng.annotations.Test;
 
 import java.math.BigInteger;
 
+import static autofixture.publicinterface.Generate.any;
 import static autofixture.publicinterface.Generate.anyInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -20,17 +21,18 @@ public class MultiplyExpressionSpecification {
         // GIVEN
         int leftValue = anyInteger();
         int rightValue = anyInteger();
+        ValueResolver resolver = any(ValueResolver.class);
 
         Expression left = mock(Expression.class);
-        when(left.computeValue()).thenReturn(BigInteger.valueOf(leftValue));
+        when(left.computeValue(resolver)).thenReturn(BigInteger.valueOf(leftValue));
 
         Expression right = mock(Expression.class);
-        when(right.computeValue()).thenReturn(BigInteger.valueOf(rightValue));
+        when(right.computeValue(resolver)).thenReturn(BigInteger.valueOf(rightValue));
 
         MultiplyExpression multiply = new MultiplyExpression(left, right);
 
         // WHEN
-        BigInteger result = multiply.computeValue();
+        BigInteger result = multiply.computeValue(resolver);
 
         // THEN
         assertThat(result).isEqualTo(BigInteger.valueOf(leftValue*rightValue));
@@ -40,17 +42,18 @@ public class MultiplyExpressionSpecification {
     public void shouldComputeNullWhenLeftIsNull() {
         // GIVEN
         int rightValue = anyInteger();
+        ValueResolver resolver = any(ValueResolver.class);
 
         Expression left = mock(Expression.class);
-        when(left.computeValue()).thenReturn(null);
+        when(left.computeValue(resolver)).thenReturn(null);
 
         Expression right = mock(Expression.class);
-        when(right.computeValue()).thenReturn(BigInteger.valueOf(rightValue));
+        when(right.computeValue(resolver)).thenReturn(BigInteger.valueOf(rightValue));
 
         MultiplyExpression multiply = new MultiplyExpression(left, right);
 
         // WHEN
-        BigInteger result = multiply.computeValue();
+        BigInteger result = multiply.computeValue(resolver);
 
         // THEN
         assertThat(result).isNull();
@@ -60,17 +63,18 @@ public class MultiplyExpressionSpecification {
     public void shouldComputeNullWhenRightIsNull() {
         // GIVEN
         int leftValue = anyInteger();
+        ValueResolver resolver = any(ValueResolver.class);
 
         Expression left = mock(Expression.class);
-        when(left.computeValue()).thenReturn(BigInteger.valueOf(leftValue));
+        when(left.computeValue(resolver)).thenReturn(BigInteger.valueOf(leftValue));
 
         Expression right = mock(Expression.class);
-        when(right.computeValue()).thenReturn(null);
+        when(right.computeValue(resolver)).thenReturn(null);
 
         MultiplyExpression multiply = new MultiplyExpression(left, right);
 
         // WHEN
-        BigInteger result = multiply.computeValue();
+        BigInteger result = multiply.computeValue(resolver);
 
         // THEN
         assertThat(result).isNull();

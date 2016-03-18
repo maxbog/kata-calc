@@ -5,6 +5,7 @@ import org.testng.annotations.Test;
 
 import java.math.BigInteger;
 
+import static autofixture.publicinterface.Generate.any;
 import static autofixture.publicinterface.Generate.anyInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,10 +18,11 @@ public class NumberSpecification {
     {
         // GIVEN
         int value = anyInteger();
+        ValueResolver resolver = any(ValueResolver.class);
         NumberExpression number = new NumberExpression(BigInteger.valueOf(value));
 
         // WHEN
-        BigInteger result = number.computeValue();
+        BigInteger result = number.computeValue(resolver);
 
         // THEN
         assertThat(result).isEqualTo(BigInteger.valueOf(value));

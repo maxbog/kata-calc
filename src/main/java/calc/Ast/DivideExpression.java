@@ -1,7 +1,8 @@
 package calc.ast;
 
+import calc.ValueResolver;
+
 import java.math.BigInteger;
-import java.util.Objects;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
@@ -16,9 +17,9 @@ public class DivideExpression extends BinaryExpression {
     }
 
     @Override
-    public BigInteger computeValue() {
-        BigInteger leftValue = getLeft().computeValue();
-        BigInteger rightValue = getRight().computeValue();
+    public BigInteger computeValue(ValueResolver valueResolver) {
+        BigInteger leftValue = getLeft().computeValue(valueResolver);
+        BigInteger rightValue = getRight().computeValue(valueResolver);
         if(leftValue == null || rightValue == null || rightValue.equals(BigInteger.ZERO))
             return null;
         return leftValue.divide(rightValue);

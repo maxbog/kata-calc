@@ -1,5 +1,7 @@
 package calc.ast;
 
+import calc.ValueResolver;
+
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -36,7 +38,7 @@ public class FunctionCall implements Expression {
     }
 
     @Override
-    public BigInteger computeValue() {
+    public BigInteger computeValue(ValueResolver valueResolver) {
         return null;
     }
 }

@@ -1,15 +1,13 @@
 package calc;
 
-import calc.ast.AddExpression;
 import calc.ast.Expression;
-import calc.ast.MultiplyExpression;
 import calc.ast.PowerExpression;
 import org.testng.annotations.Test;
 
 import java.math.BigInteger;
 
+import static autofixture.publicinterface.Generate.any;
 import static autofixture.publicinterface.Generate.anyInteger;
-import static autofixture.publicinterface.Generate.anyLong;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,17 +21,18 @@ public class PowerExpressionSpecification {
         // GIVEN
         int leftValue = anyInteger();
         int rightValue = anyInteger();
+        ValueResolver resolver = any(ValueResolver.class);
 
         Expression left = mock(Expression.class);
-        when(left.computeValue()).thenReturn(BigInteger.valueOf(leftValue));
+        when(left.computeValue(resolver)).thenReturn(BigInteger.valueOf(leftValue));
 
         Expression right = mock(Expression.class);
-        when(right.computeValue()).thenReturn(BigInteger.valueOf(rightValue));
+        when(right.computeValue(resolver)).thenReturn(BigInteger.valueOf(rightValue));
 
         PowerExpression power = new PowerExpression(left, right);
 
         // WHEN
-        BigInteger result = power.computeValue();
+        BigInteger result = power.computeValue(resolver);
 
         // THEN
         assertThat(result).isEqualTo(BigInteger.valueOf(leftValue).pow(rightValue));
@@ -43,17 +42,18 @@ public class PowerExpressionSpecification {
     public void shouldComputeNullWhenLeftIsNull() {
         // GIVEN
         int rightValue = anyInteger();
+        ValueResolver resolver = any(ValueResolver.class);
 
         Expression left = mock(Expression.class);
-        when(left.computeValue()).thenReturn(null);
+        when(left.computeValue(resolver)).thenReturn(null);
 
         Expression right = mock(Expression.class);
-        when(right.computeValue()).thenReturn(BigInteger.valueOf(rightValue));
+        when(right.computeValue(resolver)).thenReturn(BigInteger.valueOf(rightValue));
 
         PowerExpression add = new PowerExpression(left, right);
 
         // WHEN
-        BigInteger value = add.computeValue();
+        BigInteger value = add.computeValue(resolver);
 
         // THEN
         assertThat(value).isNull();
@@ -63,17 +63,18 @@ public class PowerExpressionSpecification {
     public void shouldComputeNullWhenRightIsNull() {
         // GIVEN
         int leftValue = anyInteger();
+        ValueResolver resolver = any(ValueResolver.class);
 
         Expression left = mock(Expression.class);
-        when(left.computeValue()).thenReturn(BigInteger.valueOf(leftValue));
+        when(left.computeValue(resolver)).thenReturn(BigInteger.valueOf(leftValue));
 
         Expression right = mock(Expression.class);
-        when(right.computeValue()).thenReturn(null);
+        when(right.computeValue(resolver)).thenReturn(null);
 
         PowerExpression add = new PowerExpression(left, right);
 
         // WHEN
-        BigInteger value = add.computeValue();
+        BigInteger value = add.computeValue(resolver);
 
         // THEN
         assertThat(value).isNull();

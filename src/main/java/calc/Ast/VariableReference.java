@@ -1,5 +1,7 @@
 package calc.ast;
 
+import calc.ValueResolver;
+
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -33,7 +35,7 @@ public class VariableReference implements Expression {
     }
 
     @Override
-    public BigInteger computeValue() {
-        return null;
+    public BigInteger computeValue(ValueResolver valueResolver) {
+        return valueResolver.resolveVariable(variableName);
     }
 }

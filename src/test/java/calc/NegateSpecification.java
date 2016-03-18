@@ -6,6 +6,7 @@ import org.testng.annotations.Test;
 
 import java.math.BigInteger;
 
+import static autofixture.publicinterface.Generate.any;
 import static autofixture.publicinterface.Generate.anyInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -19,14 +20,15 @@ public class NegateSpecification {
     public void shouldNegateItsInnerExpression() {
         // GIVEN
         int innerValue = anyInteger();
+        ValueResolver resolver = any(ValueResolver.class);
 
         Expression innerExpr = mock(Expression.class);
-        when(innerExpr.computeValue()).thenReturn(BigInteger.valueOf(innerValue));
+        when(innerExpr.computeValue(resolver)).thenReturn(BigInteger.valueOf(innerValue));
 
         Negate negate = new Negate(innerExpr);
 
         // WHEN
-        BigInteger result = negate.computeValue();
+        BigInteger result = negate.computeValue(resolver);
 
         // THEN
         assertThat(result).isEqualTo(BigInteger.valueOf(-innerValue));
@@ -36,12 +38,13 @@ public class NegateSpecification {
     public void shouldComputeNullWhenInnerValueIsNull() {
         // GIVEN
         Expression innerExpr = mock(Expression.class);
-        when(innerExpr.computeValue()).thenReturn(null);
+        ValueResolver resolver = any(ValueResolver.class);
+        when(innerExpr.computeValue(resolver)).thenReturn(null);
 
         Negate negate = new Negate(innerExpr);
 
         // WHEN
-        BigInteger result = negate.computeValue();
+        BigInteger result = negate.computeValue(resolver);
 
         // THEN
         assertThat(result).isNull();

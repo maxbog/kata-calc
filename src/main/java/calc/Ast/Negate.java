@@ -1,5 +1,7 @@
 package calc.ast;
 
+import calc.ValueResolver;
+
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -33,8 +35,8 @@ public class Negate implements Expression {
     }
 
     @Override
-    public BigInteger computeValue() {
-        BigInteger computed = expression.computeValue();
+    public BigInteger computeValue(ValueResolver valueResolver) {
+        BigInteger computed = expression.computeValue(valueResolver);
         if(computed == null) {
             return null;
         }

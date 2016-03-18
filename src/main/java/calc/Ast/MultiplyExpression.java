@@ -1,5 +1,7 @@
 package calc.ast;
 
+import calc.ValueResolver;
+
 import java.math.BigInteger;
 
 /**
@@ -16,9 +18,9 @@ public class MultiplyExpression extends BinaryExpression {
     }
 
     @Override
-    public BigInteger computeValue() {
-        BigInteger leftValue = getLeft().computeValue();
-        BigInteger rightValue = getRight().computeValue();
+    public BigInteger computeValue(ValueResolver valueResolver) {
+        BigInteger leftValue = getLeft().computeValue(valueResolver);
+        BigInteger rightValue = getRight().computeValue(valueResolver);
         if(leftValue == null || rightValue == null)
             return null;
         return leftValue.multiply(rightValue);
