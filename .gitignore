@@ -61,6 +61,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-.idea/modules/test-output
+.idea/modules/test-output/
 .idea/workspace.xml
 build
