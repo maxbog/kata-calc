@@ -1,5 +1,9 @@
 package calc.ast;
 
+import calc.ValueAssigner;
+import calc.ValueResolver;
+
+import java.math.BigInteger;
 import java.util.Objects;
 
 /**
@@ -33,5 +37,14 @@ public class VariableAssignment implements Statement {
     @Override
     public int hashCode() {
         return Objects.hash(variableReference, value);
+    }
+
+    @Override
+    public void execute(ValueAssigner assigner, ValueResolver resolver) {
+
+        BigInteger value = this.value.computeValue(resolver);
+        if(value != null) {
+            variableReference.assignValue(value, assigner);
+        }
     }
 }

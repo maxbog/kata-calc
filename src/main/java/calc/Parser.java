@@ -1,9 +1,7 @@
 package calc;
 
 import calc.ast.*;
-import calc.ast.NumberExpression;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -12,6 +10,12 @@ import java.util.Stack;
  * Copyright 2016 Maksymilian Boguń.
  */
 public class Parser {
+    private NodeFactory nodeFactory;
+
+    public Parser(NodeFactory nodeFactory) {
+        this.nodeFactory = nodeFactory;
+    }
+
     public Ast parse(List<Token> input) {
         TokenSource source = new TokenSource(input);
         return parseProgram(source);
@@ -32,9 +36,10 @@ public class Parser {
     private Statement parseStatement(TokenSource source) {
         Statement parsedStatement = null;
         if(!source.eol() && source.current().equals(Token.ofOperator(Operator.Let))) {
-            parsedStatement =parseLetExpression(source);
+            parsedStatement = parseLetExpression(source);
         } else {
-            parsedStatement = parseAddExpression(source);
+            Expression addExpression = parseAddExpression(source);
+            parsedStatement = nodeFactory.createTopLevelStatement(addExpression);
         }
 
         if(parsedStatement == null)
@@ -63,7 +68,7 @@ public class Parser {
         if(expr == null)
             return null;
 
-        return new VariableAssignment(ref, expr);
+        return nodeFactory.createVariableAssignment(ref, expr);
     }
 
     private Expression parseMultExpression(TokenSource source) {
@@ -76,27 +81,11 @@ public class Parser {
             Expression nextExpr = parsePowerExpression(source);
             if(nextExpr == null)
                 return null;
-            topLevelExpression = createBinaryExpression(oper, topLevelExpression, nextExpr);
+            topLevelExpression = nodeFactory.createBinaryExpression(oper, topLevelExpression, nextExpr);
             if(topLevelExpression == null)
                 return null;
         }
         return topLevelExpression;
-    }
-
-    private Expression createBinaryExpression(Operator oper, Expression left, Expression right) {
-        switch (oper) {
-            case Times:
-                return new MultiplyExpression(left, right);
-            case Divide:
-                return new DivideExpression(left, right);
-            case Plus:
-                return new AddExpression(left, right);
-            case Minus:
-                return new SubtractExpression(left, right);
-            case Power:
-                return new PowerExpression(left, right);
-        }
-        return null;
     }
 
     private boolean isMultiplicativeOperator(Token token) {
@@ -113,7 +102,7 @@ public class Parser {
             Expression nextExpr = parseMultExpression(source);
             if(nextExpr == null)
                 return null;
-            topLevelExpression = createBinaryExpression(oper, topLevelExpression, nextExpr);
+            topLevelExpression = nodeFactory.createBinaryExpression(oper, topLevelExpression, nextExpr);
             if(topLevelExpression == null)
                 return null;
         }
@@ -137,7 +126,7 @@ public class Parser {
         Expression topLevelExpression = exprStack.pop();
         while (!exprStack.empty()) {
             Expression nextExpression = exprStack.pop();
-            topLevelExpression = createBinaryExpression(Operator.Power, nextExpression, topLevelExpression);
+            topLevelExpression = nodeFactory.createBinaryExpression(Operator.Power, nextExpression, topLevelExpression);
         }
         return topLevelExpression;
     }
@@ -148,7 +137,7 @@ public class Parser {
             Expression expr = parseAtom(source);
             if(expr == null)
                 return null;
-            return new Negate(expr);
+            return nodeFactory.createNegate(expr);
         }
 
         if(!source.eol() && source.current().equals(Token.ofOperator(Operator.Plus))) {
@@ -160,7 +149,7 @@ public class Parser {
 
     private Expression parseAtom(TokenSource source) {
         if(!source.eol() && source.current().getType() == TokenType.Number) {
-            return new NumberExpression(source.matchNumber());
+            return nodeFactory.createNumber(source.matchNumber());
         }
 
         if(!source.eol() && source.current().getType() == TokenType.Identifier) {
@@ -177,10 +166,10 @@ public class Parser {
                 if(!source.match(Token.ofOperator(Operator.RightParen)))
                     return null;
 
-                return new FunctionCall(id, argument);
+                return nodeFactory.createFunctionCall(id, argument);
             }
 
-            return new VariableReference(id);
+            return nodeFactory.createVariableReference(id);
         }
 
         if(!source.eol() && source.current().equals(Token.ofOperator(Operator.LeftParen))) {
@@ -213,71 +202,7 @@ public class Parser {
         if(id == null)
             return null;
 
-        return new VariableReference(id);
+        return nodeFactory.createVariableReference(id);
     }
 
-    private class TokenSource {
-        private int currentToken;
-        private List<Token> input;
-
-        public TokenSource(List<Token> input) {
-            this.input = input;
-            this.currentToken = 0;
-        }
-
-        public boolean eol() {
-            return currentToken >= input.size();
-        }
-
-        public Token current() {
-            return input.get(currentToken);
-        }
-
-        public boolean match(Token token) {
-            if(eol())
-                return false;
-            if(current().equals(token)) {
-                advance();
-                return true;
-            }
-            return false;
-        }
-
-        private void advance() {
-            currentToken++;
-        }
-
-        public String matchIdentifier() {
-            if(eol())
-                return null;
-            Token current = current();
-            if(current.getType() == TokenType.Identifier) {
-                advance();
-                return current.getIdentifierName();
-            }
-            return null;
-        }
-
-        public BigInteger matchNumber() {
-            if(eol())
-                return null;
-            Token current = current();
-            if(current.getType() == TokenType.Number) {
-                advance();
-                return current.numberValue();
-            }
-            return null;
-        }
-
-        public Operator matchOperator() {
-            if(eol())
-                return null;
-            Token current = current();
-            if(current.getType() == TokenType.Operator) {
-                advance();
-                return current.operatorValue();
-            }
-            return null;
-        }
-    }
 }

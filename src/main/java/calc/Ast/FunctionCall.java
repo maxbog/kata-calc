@@ -39,6 +39,9 @@ public class FunctionCall implements Expression {
 
     @Override
     public BigInteger computeValue(ValueResolver valueResolver) {
-        return null;
+        BigInteger argument = this.argument.computeValue(valueResolver);
+        if(argument == null)
+            return null;
+        return valueResolver.resolveFunctionValue(functionName, argument);
     }
 }

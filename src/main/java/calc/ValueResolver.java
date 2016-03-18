@@ -1,5 +1,7 @@
 package calc;
 
+import calc.ast.Expression;
+
 import java.math.BigInteger;
 
 /**
@@ -7,4 +9,6 @@ import java.math.BigInteger;
  */
 public interface ValueResolver {
     BigInteger resolveVariable(String varName);
+
+    BigInteger resolveFunctionValue(String functionName, BigInteger argument);
 }

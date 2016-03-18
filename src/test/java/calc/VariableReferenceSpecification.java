@@ -30,8 +30,8 @@ public class VariableReferenceSpecification {
 
         // THEN
         assertThat(result).isEqualTo(variableValue);
-
     }
+
     @Test
     public void shouldComputeNullWhenVariableDoesNotHaveValue() {
         // GIVEN
