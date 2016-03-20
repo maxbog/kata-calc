@@ -1,16 +1,15 @@
 package calc;
 
 import java.math.BigInteger;
+import java.util.Optional;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
 public interface TokenSource {
-    boolean eol();
+    Optional<Token> current();
 
-    Token current();
-
-    boolean match(Token token);
+    Token match(Token token);
 
     String matchIdentifier();
 

@@ -2,6 +2,7 @@ package calc;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Optional;
 
 public class ArrayTokenSource implements TokenSource {
     private int currentToken;
@@ -12,64 +13,51 @@ public class ArrayTokenSource implements TokenSource {
         this.currentToken = 0;
     }
 
-    @Override
-    public boolean eol() {
-        return currentToken >= input.size();
-    }
 
     @Override
-    public Token current() {
-        return input.get(currentToken);
-    }
-
-    @Override
-    public boolean match(Token token) {
+    public Optional<Token> current() {
         if(eol())
-            return false;
-        if(current().equals(token)) {
-            advance();
-            return true;
-        }
-        return false;
+            return Optional.empty();
+        return Optional.of(input.get(currentToken));
     }
 
-    private void advance() {
-        currentToken++;
+    @Override
+    public Token match(Token token) {
+        return current()
+                .filter(current -> current.equals(token))
+                .map(this::advanceAndReturn)
+                .orElse(null);
     }
 
     @Override
     public String matchIdentifier() {
-        if(eol())
-            return null;
-        Token current = current();
-        if(current.getType() == TokenType.Identifier) {
-            advance();
-            return current.getIdentifierName();
-        }
-        return null;
+        return current()
+                .filter(current -> current.getType() == TokenType.Identifier)
+                .map(current -> advanceAndReturn(current.identifierName()))
+                .orElse(null);
     }
 
     @Override
     public BigInteger matchNumber() {
-        if(eol())
-            return null;
-        Token current = current();
-        if(current.getType() == TokenType.Number) {
-            advance();
-            return current.numberValue();
-        }
-        return null;
+        return current()
+                .filter(current -> current.getType() == TokenType.Number)
+                .map(current -> advanceAndReturn(current.numberValue()))
+                .orElse(null);
     }
 
     @Override
     public Operator matchOperator() {
-        if(eol())
-            return null;
-        Token current = current();
-        if(current.getType() == TokenType.Operator) {
-            advance();
-            return current.operatorValue();
-        }
-        return null;
+        return current()
+                .filter(current -> current.getType() == TokenType.Operator)
+                .map(current -> advanceAndReturn(current.operatorValue()))
+                .orElse(null);
+    }
+
+    private boolean eol() {
+        return currentToken >= input.size();
+    }
+    private <T> T advanceAndReturn(T value) {
+        currentToken++;
+        return value;
     }
 }

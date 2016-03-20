@@ -22,7 +22,7 @@ public class FullParser {
 
 
     private static Operator tryMatchMultiplicativeOperator(TokenSource source) {
-        final boolean operatorMatches = !source.eol() && isMultiplicativeOperator(source.current());
+        final boolean operatorMatches = source.current().map(FullParser::isMultiplicativeOperator).orElse(false);
         if(operatorMatches) {
             return source.matchOperator();
         }
@@ -30,7 +30,7 @@ public class FullParser {
     }
 
     private static Operator tryMatchAdditiveOperator(TokenSource source) {
-        final boolean operatorMatches = !source.eol() && isAdditiveOperator(source.current());
+        final boolean operatorMatches = source.current().map(FullParser::isAdditiveOperator).orElse(false);
         if(operatorMatches) {
             return source.matchOperator();
         }
@@ -44,7 +44,7 @@ public class FullParser {
 
     private Program parseProgram(TokenSource source) {
         List<Statement> statements = new ArrayList<>();
-        while (!source.eol()) {
+        while (source.current().isPresent()) {
             Statement statement = parseStatement(source);
             if(statement == null)
                 return null;
@@ -55,8 +55,8 @@ public class FullParser {
     }
 
     private Statement parseStatement(TokenSource source) {
-        Statement parsedStatement = null;
-        if(!source.eol() && source.current().equals(Token.ofOperator(Operator.Let))) {
+        Statement parsedStatement;
+        if(source.current().map(current-> current.equals(Token.ofOperator(Operator.Let))).orElse(false)) {
             parsedStatement = parseLetExpression(source);
         } else {
             Expression addExpression = parseAddExpression(source);
@@ -66,14 +66,14 @@ public class FullParser {
         if(parsedStatement == null)
             return null;
 
-        if(!source.match(Token.ofOperator(Operator.EndOfStatement)))
+        if(source.match(Token.ofOperator(Operator.EndOfStatement)) == null)
             return null;
 
         return parsedStatement;
     }
 
     private VariableAssignment parseLetExpression(TokenSource source) {
-        if(!source.match(Token.ofOperator(Operator.Let)))
+        if(source.match(Token.ofOperator(Operator.Let)) == null)
             return null;
 
         VariableReference ref = parseVariableReference(source);
@@ -81,7 +81,7 @@ public class FullParser {
         if(ref == null)
             return null;
 
-        if(!source.match(Token.ofOperator(Operator.Assign)))
+        if(source.match(Token.ofOperator(Operator.Assign)) == null)
             return null;
 
         Expression expr = parseAddExpression(source);
@@ -114,7 +114,7 @@ public class FullParser {
 
     // `^` power_expr
     private Expression parsePowerTailExpression(TokenSource source) {
-        if(!source.eol() && isPowerOperator(source.current())) {
+        if(source.current().map(FullParser::isPowerOperator).orElse(false)) {
             source.matchOperator();
             return parsePowerExpression(source);
         }
@@ -122,7 +122,7 @@ public class FullParser {
     }
 
     private Expression parseUnaryExpression(TokenSource source) {
-        if(!source.eol() && source.current().equals(Token.ofOperator(Operator.Minus))) {
+        if(source.current().map(current -> current.equals(Token.ofOperator(Operator.Minus))).orElse(false)) {
             source.matchOperator();
             Expression expr = parseAtom(source);
             if(expr == null)
@@ -130,7 +130,7 @@ public class FullParser {
             return nodeFactory.createNegate(expr);
         }
 
-        if(!source.eol() && source.current().equals(Token.ofOperator(Operator.Plus))) {
+        if(source.current().map(current -> current.equals(Token.ofOperator(Operator.Plus))).orElse(false)) {
             source.matchOperator();
         }
 
@@ -138,14 +138,14 @@ public class FullParser {
     }
 
     private Expression parseAtom(TokenSource source) {
-        if(!source.eol() && source.current().getType() == TokenType.Number) {
+        if(source.current().map(current -> current.getType() == TokenType.Number).orElse(false)) {
             return nodeFactory.createNumber(source.matchNumber());
         }
 
-        if(!source.eol() && source.current().getType() == TokenType.Identifier) {
+        if(source.current().map(current -> current.getType() == TokenType.Identifier).orElse(false)) {
             String id = source.matchIdentifier();
 
-            if(!source.eol() && source.current().equals(Token.ofOperator(Operator.LeftParen))) {
+            if(source.current().map(current -> current.equals(Token.ofOperator(Operator.LeftParen))).orElse(false)) {
                 source.match(Token.ofOperator(Operator.LeftParen));
 
                 Expression argument = parseAddExpression(source);
@@ -153,7 +153,7 @@ public class FullParser {
                 if(argument == null)
                     return null;
 
-                if(!source.match(Token.ofOperator(Operator.RightParen)))
+                if(source.match(Token.ofOperator(Operator.RightParen)) == null)
                     return null;
 
                 return nodeFactory.createFunctionCall(id, argument);
@@ -162,7 +162,7 @@ public class FullParser {
             return nodeFactory.createVariableReference(id);
         }
 
-        if(!source.eol() && source.current().equals(Token.ofOperator(Operator.LeftParen))) {
+        if(source.current().map(current -> current.equals(Token.ofOperator(Operator.LeftParen))).orElse(false)) {
             source.match(Token.ofOperator(Operator.LeftParen));
 
             Expression innerExpression = parseAddExpression(source);
@@ -170,7 +170,7 @@ public class FullParser {
             if(innerExpression == null)
                 return null;
 
-            if(!source.match(Token.ofOperator(Operator.RightParen)))
+            if(source.match(Token.ofOperator(Operator.RightParen)) == null)
                 return null;
             return innerExpression;
         }

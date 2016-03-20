@@ -28,7 +28,7 @@ public class Token {
         this.numberValue = intValue;
     }
 
-    public Token(String identifierName) {
+    private Token(String identifierName) {
         this.type = TokenType.Identifier;
 
         this.operatorValue = null;
@@ -52,6 +52,14 @@ public class Token {
         return new Token(BigInteger.valueOf(numberValue));
     }
 
+    public static Token ofOperator(Operator operator) {
+        return new Token(operator);
+    }
+
+    public static Token ofIdentifier(String identifierName) {
+        return new Token(identifierName);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -68,15 +76,7 @@ public class Token {
         return Objects.hash(type, numberValue, operatorValue, identifierName);
     }
 
-    public static Token ofOperator(Operator operator) {
-        return new Token(operator);
-    }
-
-    public static Token ofIdentifier(String identifierName) {
-        return new Token(identifierName);
-    }
-
-    public String getIdentifierName() {
+    public String identifierName() {
         return identifierName;
     }
 

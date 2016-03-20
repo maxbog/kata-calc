@@ -62,7 +62,7 @@ public class TokenizerSpecification {
                         Token.ofNumber(3),
                         Token.ofOperator(Operator.Divide),
                         Token.ofOperator(Operator.Minus),
-                        Token.ofNumber(2),
+                        Token.ofNumber(2)
                 }},
                 {"6*(6+6)", new Token[] {
                         Token.ofNumber(6),
@@ -71,7 +71,7 @@ public class TokenizerSpecification {
                         Token.ofNumber(6),
                         Token.ofOperator(Operator.Plus),
                         Token.ofNumber(6),
-                        Token.ofOperator(Operator.RightParen),
+                        Token.ofOperator(Operator.RightParen)
                 }},
         };
     }
