@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
-public class Program implements Ast {
+public class Program {
     private List<Statement> statements;
 
     public Program(Statement... statements) {

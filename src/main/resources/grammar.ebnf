@@ -4,12 +4,15 @@ stmt ::= let_stmt `;` | add_expr `;`
 
 let_stmt ::= `:` id `=` add_expr
 
-add_expr ::= mult_expr ((`+`|`-`) mult_expr)+
+add_expr ::= mult_expr add_expr_rest
+add_expr_tail ::= (`+`|`-`) add_expr | eps
 
-mult_expr ::= power_expr ((`*`|`/`) power_expr)+
+mult_expr ::= power_expr mult_expr_tail
+mult_expr_tail ::= (`*`|`/`) mult_expr | eps
 
-power_expr = unary_expr (`^` unary_expr)+
+power_expr = unary_expr power_expr_tail
+power_expr_tail ::= `^` power_expr | eps
 
-unary_expr ::= (`+`|`-`)? atom |
+unary_expr ::= (`+`|`-`)? atom
 
 atom ::= number | id | `(` add_expr `)` | id `(` add_expr `)`

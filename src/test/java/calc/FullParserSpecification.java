@@ -2,6 +2,7 @@ package calc;
 
 import calc.ast.*;
 import calc.ast.NumberExpression;
+import calc.parser.FullParser;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -14,17 +15,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
-public class ParserSpecification {
+public class FullParserSpecification {
     private OutputStream out = new ByteArrayOutputStream();
     @Test(dataProvider = "parserDataProvider")
-    public void shouldParseInputCorrectly(List<Token> tokens, Ast expectedParserOutput) {
+    public void shouldParseInputCorrectly(List<Token> tokens, Program expectedParserOutput) {
         // GIVEN
 
         NodeFactory nodeFactory = new PrintingNodeFactory(out);
-        Parser parser = new Parser(nodeFactory);
+        FullParser parser = new FullParser(nodeFactory);
 
         // WHEN
-        Ast ast = parser.parse(tokens);
+        Program ast = parser.parse(tokens);
 
         // THEN
         assertThat(ast).isEqualTo(expectedParserOutput);

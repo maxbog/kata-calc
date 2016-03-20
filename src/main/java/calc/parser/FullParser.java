@@ -1,23 +1,44 @@
-package calc;
+package calc.parser;
 
+import calc.*;
 import calc.ast.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
-public class Parser {
+public class FullParser {
     private NodeFactory nodeFactory;
+    private LeftAssociativeExpressionParser addExpressionParser;
+    private LeftAssociativeExpressionParser multExpressionParser;
 
-    public Parser(NodeFactory nodeFactory) {
+    public FullParser(NodeFactory nodeFactory) {
         this.nodeFactory = nodeFactory;
+        multExpressionParser = new LeftAssociativeExpressionParser(new ExpressionCollector(this::parsePowerExpression, FullParser::tryMatchMultiplicativeOperator), this.nodeFactory);
+        addExpressionParser = new LeftAssociativeExpressionParser(new ExpressionCollector(this::parseMultExpression, FullParser::tryMatchAdditiveOperator), this.nodeFactory);
     }
 
-    public Ast parse(List<Token> input) {
-        TokenSource source = new TokenSource(input);
+
+    private static Operator tryMatchMultiplicativeOperator(TokenSource source) {
+        final boolean operatorMatches = !source.eol() && isMultiplicativeOperator(source.current());
+        if(operatorMatches) {
+            return source.matchOperator();
+        }
+        return null;
+    }
+
+    private static Operator tryMatchAdditiveOperator(TokenSource source) {
+        final boolean operatorMatches = !source.eol() && isAdditiveOperator(source.current());
+        if(operatorMatches) {
+            return source.matchOperator();
+        }
+        return null;
+    }
+
+    public Program parse(List<Token> input) {
+        TokenSource source = new ArrayTokenSource(input);
         return parseProgram(source);
     }
 
@@ -71,64 +92,33 @@ public class Parser {
         return nodeFactory.createVariableAssignment(ref, expr);
     }
 
-    private Expression parseMultExpression(TokenSource source) {
-        Expression topLevelExpression = parsePowerExpression(source);
-        if(topLevelExpression == null)
-            return null;
-
-        while (!source.eol() && isMultiplicativeOperator(source.current())) {
-            Operator oper = source.matchOperator();
-            Expression nextExpr = parsePowerExpression(source);
-            if(nextExpr == null)
-                return null;
-            topLevelExpression = nodeFactory.createBinaryExpression(oper, topLevelExpression, nextExpr);
-            if(topLevelExpression == null)
-                return null;
-        }
-        return topLevelExpression;
-    }
-
-    private boolean isMultiplicativeOperator(Token token) {
-        return token.equals(Token.ofOperator(Operator.Times)) || token.equals(Token.ofOperator(Operator.Divide));
-    }
-
     private Expression parseAddExpression(TokenSource source) {
-        Expression topLevelExpression = parseMultExpression(source);
-        if(topLevelExpression == null)
-            return null;
+        return addExpressionParser.parseLeftAssociativeExpressionList(source);
+    }
 
-        while (!source.eol() && isAdditiveOperator(source.current())) {
-            Operator oper = source.matchOperator();
-            Expression nextExpr = parseMultExpression(source);
-            if(nextExpr == null)
-                return null;
-            topLevelExpression = nodeFactory.createBinaryExpression(oper, topLevelExpression, nextExpr);
-            if(topLevelExpression == null)
-                return null;
-        }
-        return topLevelExpression;
+    private Expression parseMultExpression(TokenSource source) {
+        return multExpressionParser.parseLeftAssociativeExpressionList(source);
     }
 
     private Expression parsePowerExpression(TokenSource source) {
-        Stack<Expression> exprStack = new Stack<>();
         Expression firstExpression = parseUnaryExpression(source);
         if(firstExpression == null)
             return null;
-        exprStack.push(firstExpression);
+        Expression tail = parsePowerTailExpression(source);
+        if(tail == null) {
+            return firstExpression;
+        } else {
+            return nodeFactory.createBinaryExpression(Operator.Power, firstExpression, tail);
+        }
+    }
 
-        while (!source.eol() && isPowerOperator(source.current())) {
+    // `^` power_expr
+    private Expression parsePowerTailExpression(TokenSource source) {
+        if(!source.eol() && isPowerOperator(source.current())) {
             source.matchOperator();
-            Expression nextExpr = parseUnaryExpression(source);
-            if(nextExpr == null)
-                return null;
-            exprStack.push(nextExpr);
+            return parsePowerExpression(source);
         }
-        Expression topLevelExpression = exprStack.pop();
-        while (!exprStack.empty()) {
-            Expression nextExpression = exprStack.pop();
-            topLevelExpression = nodeFactory.createBinaryExpression(Operator.Power, nextExpression, topLevelExpression);
-        }
-        return topLevelExpression;
+        return null;
     }
 
     private Expression parseUnaryExpression(TokenSource source) {
@@ -188,11 +178,15 @@ public class Parser {
         return null;
     }
 
-    private boolean isAdditiveOperator(Token token) {
+    private static boolean isAdditiveOperator(Token token) {
         return token.equals(Token.ofOperator(Operator.Plus)) || token.equals(Token.ofOperator(Operator.Minus));
     }
 
-    private boolean isPowerOperator(Token token) {
+    private static boolean isMultiplicativeOperator(Token token) {
+        return token.equals(Token.ofOperator(Operator.Times)) || token.equals(Token.ofOperator(Operator.Divide));
+    }
+
+    private static boolean isPowerOperator(Token token) {
         return token.equals(Token.ofOperator(Operator.Power));
     }
 
