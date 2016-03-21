@@ -1,9 +1,12 @@
 package calc;
 
+
+import fj.data.Array;
+import fj.data.Collectors;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,8 +27,8 @@ public class Tokenizer {
         operatorMap.put(';', Operator.EndOfStatement);
     };
 
-    public List<Token> tokenize(String input) {
-        ArrayList<Token> tokens = new ArrayList<Token>();
+    public Array<Token> tokenize(String input) {
+        ArrayList<Token> tokens = new ArrayList<>();
         TokenizerState state = new TokenizerState(input);
         while (!state.eol()) {
             if (operatorMap.containsKey(state.currentChar())) {
@@ -40,7 +43,7 @@ public class Tokenizer {
                 return null;
             }
         }
-        return tokens;
+        return tokens.stream().collect(Collectors.toArray());
     }
 
     private Operator tokenizeSingleOperator(TokenizerState state) {

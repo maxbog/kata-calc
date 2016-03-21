@@ -1,8 +1,8 @@
 package calc.parser;
 
 import calc.ast.Expression;
+import fj.data.List;
 
-import java.util.List;
 import java.util.Objects;
 
 public class ExpressionList {

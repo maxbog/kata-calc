@@ -1,14 +1,14 @@
 package calc;
 
 import calc.ast.*;
-import calc.ast.NumberExpression;
 import calc.parser.FullParser;
+import fj.data.Array;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,17 +18,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class FullParserSpecification {
     private OutputStream out = new ByteArrayOutputStream();
     @Test(dataProvider = "parserDataProvider")
-    public void shouldParseInputCorrectly(List<Token> tokens, Program expectedParserOutput) {
+    public void shouldParseInputCorrectly(Array<Token> tokens, Program expectedParserOutput) {
         // GIVEN
 
         NodeFactory nodeFactory = new PrintingNodeFactory(out);
         FullParser parser = new FullParser(nodeFactory);
 
         // WHEN
-        Program ast = parser.parse(tokens);
+        Optional<Program> ast = parser.parse(tokens);
 
         // THEN
-        assertThat(ast).isEqualTo(expectedParserOutput);
+        assertThat(ast).hasValue(expectedParserOutput);
     }
 
     @DataProvider

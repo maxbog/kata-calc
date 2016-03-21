@@ -1,10 +1,13 @@
 package calc.parser;
 
-import calc.*;
+import calc.TokenSource;
 import calc.ast.Expression;
+import fj.data.List;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
+
+import static fj.data.List.list;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
@@ -18,32 +21,21 @@ public class ExpressionCollector {
         this.delimiterMatcher = delimiterMatcher;
     }
 
-    private boolean collectTailExpression(TokenSource source, List<Operation> operations) {
-        Operator operator = delimiterMatcher.apply(source);
-
-        if (operator != null) {
-            Expression currentExpression = lowerLevelParser.apply(source);
-
-            if (currentExpression == null)
-                return false;
-
-            operations.add(new Operation(operator, currentExpression));
-
-            return collectTailExpression(source, operations);
-        }
-
-        return true;
+    private Optional<List<Operation>> collectTailExpression(TokenSource source) {
+        return delimiterMatcher.apply(source)
+                .map(operator -> collectExpressions(source, (currentExpression, tail) -> tail.cons(new Operation(operator, currentExpression))))
+                .orElse(Optional.of(list()));
     }
 
-    public ExpressionList collectExpressions(TokenSource source) {
-        Expression firstExpression = lowerLevelParser.apply(source);
-        if(firstExpression == null)
-            return null;
-
-        List<Operation> nextExpressions = new ArrayList<>();
-        if(!collectTailExpression(source, nextExpressions))
-            return null;
-
-        return new ExpressionList(firstExpression, nextExpressions);
+    private <T> Optional<T> collectExpressions(TokenSource source, BiFunction<Expression, List<Operation>, T> resultCreator) {
+        return lowerLevelParser.apply(source)
+                .flatMap(currentExpression ->
+                        collectTailExpression(source)
+                                .map(tail -> resultCreator.apply(currentExpression, tail)));
     }
+
+    public Optional<ExpressionList> collectExpressions(TokenSource source) {
+        return collectExpressions(source, ExpressionList::new);
+    }
+
 }

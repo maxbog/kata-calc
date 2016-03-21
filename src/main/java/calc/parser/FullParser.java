@@ -1,10 +1,17 @@
 package calc.parser;
 
-import calc.*;
+import calc.ArrayTokenSource;
+import calc.Operator;
+import calc.Token;
+import calc.TokenSource;
 import calc.ast.*;
+import fj.data.Array;
+import fj.data.List;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
+
+import static fj.data.List.list;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
@@ -16,166 +23,126 @@ public class FullParser {
 
     public FullParser(NodeFactory nodeFactory) {
         this.nodeFactory = nodeFactory;
-        multExpressionParser = new LeftAssociativeExpressionParser(new ExpressionCollector(this::parsePowerExpression, FullParser::tryMatchMultiplicativeOperator), this.nodeFactory);
-        addExpressionParser = new LeftAssociativeExpressionParser(new ExpressionCollector(this::parseMultExpression, FullParser::tryMatchAdditiveOperator), this.nodeFactory);
+        multExpressionParser = new LeftAssociativeExpressionParser(new ExpressionCollector(this::parsePowerExpression, FullParser::matchMultiplicativeOperator), this.nodeFactory);
+        addExpressionParser = new LeftAssociativeExpressionParser(new ExpressionCollector(this::parseMultExpression, FullParser::matchAdditiveOperator), this.nodeFactory);
     }
 
 
-    private static Operator tryMatchMultiplicativeOperator(TokenSource source) {
-        final boolean operatorMatches = source.current().map(FullParser::isMultiplicativeOperator).orElse(false);
-        if(operatorMatches) {
-            return source.matchOperator();
-        }
-        return null;
+    private static Optional<Operator> matchMultiplicativeOperator(TokenSource source) {
+        return source.current()
+                .filter(FullParser::isMultiplicativeOperator)
+                .flatMap(x -> source.matchOperator());
     }
 
-    private static Operator tryMatchAdditiveOperator(TokenSource source) {
-        final boolean operatorMatches = source.current().map(FullParser::isAdditiveOperator).orElse(false);
-        if(operatorMatches) {
-            return source.matchOperator();
-        }
-        return null;
+    private static Optional<Operator> matchAdditiveOperator(TokenSource source) {
+        return source.current()
+                .filter(FullParser::isAdditiveOperator)
+                .flatMap(x -> source.matchOperator());
     }
 
-    public Program parse(List<Token> input) {
+    public Optional<Program> parse(Array<Token> input) {
         TokenSource source = new ArrayTokenSource(input);
         return parseProgram(source);
     }
 
-    private Program parseProgram(TokenSource source) {
-        List<Statement> statements = new ArrayList<>();
-        while (source.current().isPresent()) {
-            Statement statement = parseStatement(source);
-            if(statement == null)
-                return null;
-            statements.add(statement);
-        }
-
-        return new Program(statements);
+    private Optional<Program> parseProgram(TokenSource source) {
+        return parseStatementList(source)
+                .map(Program::new);
     }
 
-    private Statement parseStatement(TokenSource source) {
-        Statement parsedStatement;
-        if(source.current().map(current-> current.equals(Token.ofOperator(Operator.Let))).orElse(false)) {
-            parsedStatement = parseLetExpression(source);
-        } else {
-            Expression addExpression = parseAddExpression(source);
-            parsedStatement = nodeFactory.createTopLevelStatement(addExpression);
-        }
-
-        if(parsedStatement == null)
-            return null;
-
-        if(source.match(Token.ofOperator(Operator.EndOfStatement)) == null)
-            return null;
-
-        return parsedStatement;
+    private Optional<List<Statement>> parseStatementList(TokenSource source) {
+        return parseStatement(source)
+                .map(stmt ->
+                        parseStatementList(source)
+                                .map(tail -> tail.cons(stmt))
+                                .orElse(list(stmt)));
     }
 
-    private VariableAssignment parseLetExpression(TokenSource source) {
-        if(source.match(Token.ofOperator(Operator.Let)) == null)
-            return null;
-
-        VariableReference ref = parseVariableReference(source);
-
-        if(ref == null)
-            return null;
-
-        if(source.match(Token.ofOperator(Operator.Assign)) == null)
-            return null;
-
-        Expression expr = parseAddExpression(source);
-
-        if(expr == null)
-            return null;
-
-        return nodeFactory.createVariableAssignment(ref, expr);
+    private Optional<Statement> parseStatement(TokenSource source) {
+        return Optionals.firstOf(
+                () -> parseLetStatement(source),
+                () -> parseAddExpression(source)
+                        .map(addExpression -> nodeFactory.createTopLevelStatement(addExpression))
+        ).filter(stmt -> source.match(Token.ofOperator(Operator.EndOfStatement)).isPresent());
     }
 
-    private Expression parseAddExpression(TokenSource source) {
+    private Optional<Statement> parseLetStatement(TokenSource source) {
+        return source.match(Token.ofOperator(Operator.Let))
+                .flatMap(let -> parseVariableReference(source))
+                .flatMap(ref-> source.match(Token.ofOperator(Operator.Assign))
+                        .flatMap(assign -> parseAddExpression(source)
+                                .map(expr -> nodeFactory.createVariableAssignment(ref, expr))
+                ));
+    }
+
+    private Optional<Expression> parseAddExpression(TokenSource source) {
         return addExpressionParser.parseLeftAssociativeExpressionList(source);
     }
 
-    private Expression parseMultExpression(TokenSource source) {
+    private Optional<Expression> parseMultExpression(TokenSource source) {
         return multExpressionParser.parseLeftAssociativeExpressionList(source);
     }
 
-    private Expression parsePowerExpression(TokenSource source) {
-        Expression firstExpression = parseUnaryExpression(source);
-        if(firstExpression == null)
-            return null;
-        Expression tail = parsePowerTailExpression(source);
-        if(tail == null) {
-            return firstExpression;
-        } else {
-            return nodeFactory.createBinaryExpression(Operator.Power, firstExpression, tail);
-        }
+    private Optional<Expression> parsePowerExpression(TokenSource source) {
+        return parseUnaryExpression(source)
+                .flatMap(firstExpression ->
+                        Optionals.firstOf(
+                            () -> parsePowerTailExpression(source)
+                                    .map(tail -> nodeFactory.createBinaryExpression(Operator.Power, firstExpression, tail)),
+                            () -> Optional.of(firstExpression)
+                ));
     }
 
     // `^` power_expr
-    private Expression parsePowerTailExpression(TokenSource source) {
-        if(source.current().map(FullParser::isPowerOperator).orElse(false)) {
-            source.matchOperator();
-            return parsePowerExpression(source);
-        }
-        return null;
+    private Optional<Expression> parsePowerTailExpression(TokenSource source) {
+        return source.match(Token.ofOperator(Operator.Power))
+                .flatMap(power -> parsePowerExpression(source));
     }
 
-    private Expression parseUnaryExpression(TokenSource source) {
-        if(source.current().map(current -> current.equals(Token.ofOperator(Operator.Minus))).orElse(false)) {
-            source.matchOperator();
-            Expression expr = parseAtom(source);
-            if(expr == null)
-                return null;
-            return nodeFactory.createNegate(expr);
-        }
-
-        if(source.current().map(current -> current.equals(Token.ofOperator(Operator.Plus))).orElse(false)) {
-            source.matchOperator();
-        }
-
-        return parseAtom(source);
+    private Optional<Expression> parseUnaryExpression(TokenSource source) {
+        return Optionals.firstOf(
+                () -> source.match(Token.ofOperator(Operator.Minus))
+                    .flatMap(minus -> parseAtom(source))
+                    .map(nodeFactory::createNegate),
+                () -> {
+                    source.match(Token.ofOperator(Operator.Plus));
+                    return parseAtom(source);
+                }
+        );
     }
 
-    private Expression parseAtom(TokenSource source) {
-        if(source.current().map(current -> current.getType() == TokenType.Number).orElse(false)) {
-            return nodeFactory.createNumber(source.matchNumber());
-        }
+    private Optional<Expression> parseAtom(TokenSource source) {
+        return Optionals.firstOf(
+                () -> parseNumber(source),
+                () -> parseIdentifier(source),
+                () -> parseSubExpression(source));
+    }
 
-        if(source.current().map(current -> current.getType() == TokenType.Identifier).orElse(false)) {
-            String id = source.matchIdentifier();
+    private Optional<Expression> parseNumber(TokenSource source) {
+        return source.matchNumber()
+                .map(nodeFactory::createNumber);
+    }
 
-            if(source.current().map(current -> current.equals(Token.ofOperator(Operator.LeftParen))).orElse(false)) {
-                source.match(Token.ofOperator(Operator.LeftParen));
+    private Optional<Expression> parseSubExpression(TokenSource source) {
+        return source.match(Token.ofOperator(Operator.LeftParen))
+                .flatMap(leftParen -> parseAddExpression(source))
+                .filter(innerExpression -> source.match(Token.ofOperator(Operator.RightParen)).isPresent());
+    }
 
-                Expression argument = parseAddExpression(source);
+    private Optional<Expression> parseIdentifier(TokenSource source) {
+        return source.matchIdentifier()
+                .flatMap(id ->
+                        Optionals.firstOf(
+                                () -> parseArgumentList(source, id),
+                                () -> Optional.of(nodeFactory.createVariableReference(id))
+                        ));
+    }
 
-                if(argument == null)
-                    return null;
-
-                if(source.match(Token.ofOperator(Operator.RightParen)) == null)
-                    return null;
-
-                return nodeFactory.createFunctionCall(id, argument);
-            }
-
-            return nodeFactory.createVariableReference(id);
-        }
-
-        if(source.current().map(current -> current.equals(Token.ofOperator(Operator.LeftParen))).orElse(false)) {
-            source.match(Token.ofOperator(Operator.LeftParen));
-
-            Expression innerExpression = parseAddExpression(source);
-
-            if(innerExpression == null)
-                return null;
-
-            if(source.match(Token.ofOperator(Operator.RightParen)) == null)
-                return null;
-            return innerExpression;
-        }
-
-        return null;
+    private Optional<Expression> parseArgumentList(TokenSource source, String id) {
+        return source.match(Token.ofOperator(Operator.LeftParen))
+                .flatMap(leftParen -> parseAddExpression(source))
+                .filter(argument -> source.match(Token.ofOperator(Operator.RightParen)).isPresent())
+                .map(argument -> nodeFactory.createFunctionCall(id, argument));
     }
 
     private static boolean isAdditiveOperator(Token token) {
@@ -186,17 +153,21 @@ public class FullParser {
         return token.equals(Token.ofOperator(Operator.Times)) || token.equals(Token.ofOperator(Operator.Divide));
     }
 
-    private static boolean isPowerOperator(Token token) {
-        return token.equals(Token.ofOperator(Operator.Power));
+    private Optional<VariableReference> parseVariableReference(TokenSource source) {
+        return source.matchIdentifier()
+                .map(nodeFactory::createVariableReference);
     }
 
-    private VariableReference parseVariableReference(TokenSource source) {
-        String id = source.matchIdentifier();
+}
 
-        if(id == null)
-            return null;
-
-        return nodeFactory.createVariableReference(id);
+final class Optionals {
+    @SafeVarargs
+    static <T> Optional<T> firstOf(Supplier<Optional<T>>... alternatives) {
+        for (Supplier<Optional<T>> alternative: alternatives) {
+            final Optional<T> optional = alternative.get();
+            if(optional.isPresent())
+                return optional;
+        }
+        return Optional.empty();
     }
-
 }

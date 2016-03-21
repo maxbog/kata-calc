@@ -1,10 +1,10 @@
 package calc;
 
+import fj.data.Array;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -82,7 +82,7 @@ public class TokenizerSpecification {
         Tokenizer lexer = new Tokenizer();
 
         // WHEN
-        List<Token> tokens = lexer.tokenize(input);
+        Array<Token> tokens = lexer.tokenize(input);
 
         // THEN
         assertThat(tokens.get(0)).isEqualTo(Token.ofNumber(lexedNumber));
@@ -94,7 +94,7 @@ public class TokenizerSpecification {
         Tokenizer lexer = new Tokenizer();
 
         // WHEN
-        List<Token> tokens = lexer.tokenize(input);
+        Array<Token> tokens = lexer.tokenize(input);
 
         // THEN
         assertThat(tokens.get(0)).isEqualTo(Token.ofOperator(operator));
@@ -106,7 +106,7 @@ public class TokenizerSpecification {
         Tokenizer lexer = new Tokenizer();
 
         // WHEN
-        List<Token> tokens = lexer.tokenize(input);
+        Array<Token> tokens = lexer.tokenize(input);
 
         // THEN
         assertThat(tokens).containsExactlyElementsOf(Arrays.asList(expectedTokens));

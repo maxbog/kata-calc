@@ -4,6 +4,8 @@ import calc.TokenSource;
 import calc.ast.BinaryExpressionFactory;
 import calc.ast.Expression;
 
+import java.util.Optional;
+
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
@@ -17,19 +19,16 @@ public class LeftAssociativeExpressionParser {
     }
 
     private Expression leftAssociativeCombine(ExpressionList list) {
-        Expression result = list.getFirstExpression();
-        for (Operation operation : list.getNextOperations()) {
-            result = operation.createExpression(result, nodeFactory);
-        }
-        return result;
+        return list.getNextOperations()
+                .foldLeft(
+                        (current, operation) -> operation.createExpression(current, nodeFactory),
+                        list.getFirstExpression()
+                );
     }
 
-    public Expression parseLeftAssociativeExpressionList(TokenSource source) {
-
-        ExpressionList operations = expressionCollector.collectExpressions(source);
-        if(operations == null)
-            return null;
-        return leftAssociativeCombine(operations);
+    public Optional<Expression> parseLeftAssociativeExpressionList(TokenSource source) {
+        return expressionCollector.collectExpressions(source)
+                .map(this::leftAssociativeCombine);
     }
 }
 

@@ -32,7 +32,8 @@ public class PrintingNodeFactory implements NodeFactory {
         return null;
     }
 
-    public NumberExpression createNumber(BigInteger value) {
+    @Override
+    public Expression createNumber(BigInteger value) {
         return new NumberExpression(value);
     }
 

@@ -1,4 +1,7 @@
-program ::= stmt*
+program ::= stmt_list
+
+stmt_list ::= stmt stmt_list_tail
+stmt_list_tail ::= stmt_list | eps
 
 stmt ::= let_stmt `;` | add_expr `;`
 

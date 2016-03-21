@@ -2,6 +2,7 @@ package calc;
 
 import java.math.BigInteger;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
@@ -9,11 +10,11 @@ import java.util.Optional;
 public interface TokenSource {
     Optional<Token> current();
 
-    Token match(Token token);
+    Optional<Token> match(Token token);
 
-    String matchIdentifier();
+    Optional<String> matchIdentifier();
 
-    BigInteger matchNumber();
+    Optional<BigInteger> matchNumber();
 
-    Operator matchOperator();
+    Optional<Operator> matchOperator();
 }

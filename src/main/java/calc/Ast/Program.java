@@ -1,9 +1,8 @@
 package calc.ast;
 
-import java.util.Arrays;
-import java.util.List;
+import fj.data.List;
+
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
@@ -12,7 +11,7 @@ public class Program {
     private List<Statement> statements;
 
     public Program(Statement... statements) {
-        this.statements = Arrays.asList(statements);
+        this.statements = List.list(statements);
     }
     public Program(List<Statement> statements) {
         this.statements = statements;
@@ -20,7 +19,7 @@ public class Program {
 
     @Override
     public String toString() {
-        return "[Program \n" + String.join("\n", statements.stream().map(Statement::toString).collect(Collectors.toList())) +"\n]";
+        return "[Program \n" + String.join("\n", statements.map(Statement::toString)) +"\n]";
     }
 
     @Override

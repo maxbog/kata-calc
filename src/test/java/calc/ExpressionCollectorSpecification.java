@@ -8,11 +8,10 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Fail.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -27,19 +26,21 @@ public class ExpressionCollectorSpecification {
         TokenSource source = Generate.any(TokenSource.class);
 
         TokenMatcher operatorMatcher = mock(TokenMatcher.class);
-        when(operatorMatcher.apply(source)).thenReturn(null);
+        when(operatorMatcher.apply(source)).thenReturn(Optional.empty());
 
         Parser<Expression> lowerLevelParser = mock(Parser.class);
-        when(lowerLevelParser.apply(source)).thenReturn(firstExpression);
+        when(lowerLevelParser.apply(source)).thenReturn(Optional.of(firstExpression));
 
         ExpressionCollector collector = new ExpressionCollector(lowerLevelParser, operatorMatcher);
 
         // WHEN
-        ExpressionList result = collector.collectExpressions(source);
+        Optional<ExpressionList> result = collector.collectExpressions(source);
 
         // THEN
-        assertThat(result.getFirstExpression()).isEqualTo(firstExpression);
-        assertThat(result.getNextOperations()).isEmpty();
+        assertThat(result).hasValueSatisfying(list -> {
+            assertThat(list.getFirstExpression()).isEqualTo(firstExpression);
+            assertThat(list.getNextOperations()).isEmpty();
+        });
     }
 
     @Test
@@ -51,27 +52,23 @@ public class ExpressionCollectorSpecification {
         TokenSource source = Generate.any(TokenSource.class);
 
         TokenMatcher operatorMatcher = mock(TokenMatcher.class);
-        when(operatorMatcher.apply(source)).thenReturn(operator).thenReturn(null);
+        when(operatorMatcher.apply(source)).thenReturn(Optional.of(operator)).thenReturn(Optional.empty());
 
         Parser<Expression> lowerLevelParser = mock(Parser.class);
-        when(lowerLevelParser.apply(source)).thenReturn(firstExpression).thenReturn(secondExpression);
+        when(lowerLevelParser.apply(source)).thenReturn(Optional.of(firstExpression)).thenReturn(Optional.of(secondExpression));
 
         ExpressionCollector collector = new ExpressionCollector(lowerLevelParser, operatorMatcher);
 
         // WHEN
-        ExpressionList result = collector.collectExpressions(source);
+        Optional<ExpressionList> result = collector.collectExpressions(source);
 
         // THEN
-        assertThat(result.getFirstExpression()).isEqualTo(firstExpression);
-        assertThat(result.getNextOperations()).hasSize(1);
-        assertThat(result.getNextOperations().get(0)).isEqualTo(new Operation(operator, secondExpression));
-    }
+        assertThat(result).hasValueSatisfying(list -> {
+            assertThat(list.getFirstExpression()).isEqualTo(firstExpression);
+            assertThat(list.getNextOperations()).hasSize(1);
+            assertThat(list.getNextOperations().head()).isEqualTo(new Operation(operator, secondExpression));
+        });
 
-
-    void addAnyOperation(List<Operation> expected) {
-        Operator operator = Generate.any(Operator.class);
-        Expression secondExpression = Generate.any(Expression.class);
-        expected.add(new Operation(operator, secondExpression));
     }
 
     @Test
@@ -90,25 +87,27 @@ public class ExpressionCollectorSpecification {
 
         TokenMatcher operatorMatcher = mock(TokenMatcher.class);
 
-        OngoingStubbing<Operator> operatorStubbing = when(operatorMatcher.apply(source));
+        OngoingStubbing<Optional<Operator>> operatorStubbing = when(operatorMatcher.apply(source));
         for (Operator operator : expectedOperators) {
-            operatorStubbing = operatorStubbing.thenReturn(operator);
+            operatorStubbing = operatorStubbing.thenReturn(Optional.of(operator));
         }
-        operatorStubbing.thenReturn(null);
+        operatorStubbing.thenReturn(Optional.empty());
 
         Parser<Expression> lowerLevelParser = mock(Parser.class);
-        OngoingStubbing<Expression> expressionStubbing = when(lowerLevelParser.apply(source)).thenReturn(firstExpression);
+        OngoingStubbing<Optional<Expression>> expressionStubbing = when(lowerLevelParser.apply(source)).thenReturn(Optional.of(firstExpression));
         for (Expression expression : expectedExpressions) {
-            expressionStubbing = expressionStubbing.thenReturn(expression);
+            expressionStubbing = expressionStubbing.thenReturn(Optional.of(expression));
         }
 
         ExpressionCollector collector = new ExpressionCollector(lowerLevelParser, operatorMatcher);
 
         // WHEN
-        ExpressionList result = collector.collectExpressions(source);
+        Optional<ExpressionList> result = collector.collectExpressions(source);
 
         // THEN
-        assertThat(result.getFirstExpression()).isEqualTo(firstExpression);
-        assertThat(result.getNextOperations()).containsExactlyElementsOf(expectedOperations);
+        assertThat(result).hasValueSatisfying(list -> {
+            assertThat(list.getFirstExpression()).isEqualTo(firstExpression);
+            assertThat(list.getNextOperations()).containsExactlyElementsOf(expectedOperations);
+        });
     }
 }

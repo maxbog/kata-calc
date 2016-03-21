@@ -7,14 +7,13 @@ import calc.parser.ExpressionCollector;
 import calc.parser.ExpressionList;
 import calc.parser.LeftAssociativeExpressionParser;
 import calc.parser.Operation;
+import fj.data.List;
 import org.testng.annotations.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.Optional;
 
+import static fj.data.List.list;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,19 +25,19 @@ public class LeftAssociativeExpressionParserSpecification {
     public void shouldReturnFirstExpressionWhenOperationListIsEmpty() {
         // GIVEN
         TokenSource source = Generate.any(TokenSource.class);
-        ExpressionList list = new ExpressionList(Generate.any(Expression.class), Collections.emptyList());
+        ExpressionList list = new ExpressionList(Generate.any(Expression.class), List.nil());
         BinaryExpressionFactory expressionFactory = Generate.any(BinaryExpressionFactory.class);
 
         ExpressionCollector collector = mock(ExpressionCollector.class);
-        when(collector.collectExpressions(source)).thenReturn(list);
+        when(collector.collectExpressions(source)).thenReturn(Optional.of(list));
 
         LeftAssociativeExpressionParser parser = new LeftAssociativeExpressionParser(collector, expressionFactory);
 
         // WHEN
-        Expression result = parser.parseLeftAssociativeExpressionList(source);
+        Optional<Expression> result = parser.parseLeftAssociativeExpressionList(source);
 
         // THEN
-        assertThat(result).isEqualTo(list.getFirstExpression());
+        assertThat(result).hasValue(list.getFirstExpression());
     }
 
     @Test
@@ -50,20 +49,20 @@ public class LeftAssociativeExpressionParserSpecification {
         Expression combinedExpression = Generate.any(Expression.class);
         Operator firstOperator = Generate.any(Operator.class);
 
-        ExpressionList list = new ExpressionList(firstExpression, Collections.singletonList(new Operation(firstOperator, secondExpression)));
+        ExpressionList list = new ExpressionList(firstExpression, list(new Operation(firstOperator, secondExpression)));
         BinaryExpressionFactory expressionFactory = mock(BinaryExpressionFactory.class);
         when(expressionFactory.createBinaryExpression(firstOperator, firstExpression, secondExpression)).thenReturn(combinedExpression);
 
         ExpressionCollector collector = mock(ExpressionCollector.class);
-        when(collector.collectExpressions(source)).thenReturn(list);
+        when(collector.collectExpressions(source)).thenReturn(Optional.of(list));
 
         LeftAssociativeExpressionParser parser = new LeftAssociativeExpressionParser(collector, expressionFactory);
 
         // WHEN
-        Expression result = parser.parseLeftAssociativeExpressionList(source);
+        Optional<Expression> result = parser.parseLeftAssociativeExpressionList(source);
 
         // THEN
-        assertThat(result).isEqualTo(combinedExpression);
+        assertThat(result).hasValue(combinedExpression);
     }
 
     @Test
@@ -80,7 +79,7 @@ public class LeftAssociativeExpressionParserSpecification {
         Operator firstOperator = Generate.any(Operator.class);
         Operator secondOperator = Generate.any(Operator.class);
 
-        ExpressionList list = new ExpressionList(firstExpression, Arrays.asList(
+        ExpressionList list = new ExpressionList(firstExpression, list(
                 new Operation(firstOperator, secondExpression),
                 new Operation(secondOperator, thirdExpression)));
 
@@ -89,14 +88,14 @@ public class LeftAssociativeExpressionParserSpecification {
         when(expressionFactory.createBinaryExpression(secondOperator, firstCombinedExpression, thirdExpression)).thenReturn(secondCombinedExpression);
 
         ExpressionCollector collector = mock(ExpressionCollector.class);
-        when(collector.collectExpressions(source)).thenReturn(list);
+        when(collector.collectExpressions(source)).thenReturn(Optional.of(list));
 
         LeftAssociativeExpressionParser parser = new LeftAssociativeExpressionParser(collector, expressionFactory);
 
         // WHEN
-        Expression result = parser.parseLeftAssociativeExpressionList(source);
+        Optional<Expression> result = parser.parseLeftAssociativeExpressionList(source);
 
         // THEN
-        assertThat(result).isEqualTo(secondCombinedExpression);
+        assertThat(result).hasValue(secondCombinedExpression);
     }
 }
