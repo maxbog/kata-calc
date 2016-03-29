@@ -1,60 +1,65 @@
 package calc;
 
+import fj.F;
+import fj.data.Array;
+import fj.data.Option;
+
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Optional;
 
 public class ArrayTokenSource implements TokenSource {
     private int currentToken;
-    private List<Token> input;
+    private Array<Token> input;
 
-    public ArrayTokenSource(List<Token> input) {
+    public ArrayTokenSource(Array<Token> input) {
         this.input = input;
         this.currentToken = 0;
     }
 
 
     @Override
-    public Optional<Token> current() {
+    public Option<Token> current() {
         if(eol())
-            return Optional.empty();
-        return Optional.of(input.get(currentToken));
+            return Option.none();
+        return Option.some(input.get(currentToken));
     }
 
     @Override
-    public Token match(Token token) {
-        return current()
-                .filter(current -> current.equals(token))
-                .map(this::advanceAndReturn)
-                .orElse(null);
+    public Option<Token> match(Token token) {
+        return match(current -> current.equals(token));
     }
 
     @Override
-    public String matchIdentifier() {
+    public Option<Token> match(F<Token, Boolean> matcher) {
         return current()
-                .filter(current -> current.getType() == TokenType.Identifier)
-                .map(current -> advanceAndReturn(current.identifierName()))
-                .orElse(null);
+                .filter(matcher)
+                .map(this::advanceAndReturn);
     }
 
     @Override
-    public BigInteger matchNumber() {
-        return current()
-                .filter(current -> current.getType() == TokenType.Number)
-                .map(current -> advanceAndReturn(current.numberValue()))
-                .orElse(null);
+    public Option<String> matchIdentifier() {
+        return match(current -> current.getType() == TokenType.Identifier)
+                .map(Token::identifierName);
     }
 
     @Override
-    public Operator matchOperator() {
-        return current()
-                .filter(current -> current.getType() == TokenType.Operator)
-                .map(current -> advanceAndReturn(current.operatorValue()))
-                .orElse(null);
+    public Option<BigInteger> matchNumber() {
+        return match(current -> current.getType() == TokenType.Number)
+                .map(Token::numberValue);
+    }
+
+    @Override
+    public Option<Operator> matchOperator() {
+        return match(current -> current.getType() == TokenType.Operator)
+                .map(Token::operatorValue);
+    }
+    @Override
+    public Option<Operator> matchOperator(Operator expectedOperator) {
+        return match(current -> current.getType() == TokenType.Operator && current.operatorValue() == expectedOperator)
+                .map(Token::operatorValue);
     }
 
     private boolean eol() {
-        return currentToken >= input.size();
+        return currentToken >= input.length();
     }
     private <T> T advanceAndReturn(T value) {
         currentToken++;

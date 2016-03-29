@@ -1,19 +1,24 @@
 package calc;
 
+import fj.F;
+import fj.data.Option;
+
 import java.math.BigInteger;
-import java.util.Optional;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
  */
 public interface TokenSource {
-    Optional<Token> current();
+    Option<Token> current();
 
-    Token match(Token token);
+    Option<Token> match(Token token);
 
-    String matchIdentifier();
+    Option<Token> match(F<Token, Boolean> token);
 
-    BigInteger matchNumber();
+    Option<String> matchIdentifier();
 
-    Operator matchOperator();
+    Option<BigInteger> matchNumber();
+
+    Option<Operator> matchOperator();
+    Option<Operator> matchOperator(Operator expectedOperator);
 }

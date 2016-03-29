@@ -1,10 +1,10 @@
 package calc.parser;
 
-import calc.*;
+import calc.Operator;
+import calc.TokenSource;
 import calc.ast.Expression;
-
-import java.util.ArrayList;
-import java.util.List;
+import fj.data.List;
+import fj.data.Option;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
@@ -18,32 +18,26 @@ public class ExpressionCollector {
         this.delimiterMatcher = delimiterMatcher;
     }
 
-    private boolean collectTailExpression(TokenSource source, List<Operation> operations) {
-        Operator operator = delimiterMatcher.apply(source);
-
-        if (operator != null) {
-            Expression currentExpression = lowerLevelParser.apply(source);
-
-            if (currentExpression == null)
-                return false;
-
-            operations.add(new Operation(operator, currentExpression));
-
-            return collectTailExpression(source, operations);
-        }
-
-        return true;
+    private Option<List<Operation>> collectTailExpression(TokenSource source) {
+        return delimiterMatcher.apply(source)
+                .bind(operator -> parseNextExpression(source, operator));
     }
 
-    public ExpressionList collectExpressions(TokenSource source) {
-        Expression firstExpression = lowerLevelParser.apply(source);
-        if(firstExpression == null)
-            return null;
+    private Option<List<Operation>> parseNextExpression(TokenSource source, Operator operator) {
+        return lowerLevelParser.apply(source).map(currentExpression -> extendExpressionList(source, operator, currentExpression));
+    }
 
-        List<Operation> nextExpressions = new ArrayList<>();
-        if(!collectTailExpression(source, nextExpressions))
-            return null;
+    private List<Operation> extendExpressionList(TokenSource source, Operator operator, Expression currentExpression) {
+        Operation currentOperation = new Operation(operator, currentExpression);
 
-        return new ExpressionList(firstExpression, nextExpressions);
+        return collectTailExpression(source)
+            .map(operations -> operations.cons(currentOperation))
+            .orSome(() -> List.single(currentOperation));
+    }
+
+    public Option<ExpressionList> collectExpressions(TokenSource source) {
+        return lowerLevelParser.apply(source)
+                .bind(firstExpression -> collectTailExpression(source)
+                        .map(nextExpressions -> new ExpressionList(firstExpression, nextExpressions)));
     }
 }

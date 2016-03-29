@@ -3,6 +3,7 @@ package calc;
 import autofixture.publicinterface.Generate;
 import calc.ast.Expression;
 import calc.parser.*;
+import fj.data.Option;
 import org.mockito.stubbing.OngoingStubbing;
 import org.testng.annotations.Test;
 
@@ -11,8 +12,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Fail.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -27,7 +26,7 @@ public class ExpressionCollectorSpecification {
         TokenSource source = Generate.any(TokenSource.class);
 
         TokenMatcher operatorMatcher = mock(TokenMatcher.class);
-        when(operatorMatcher.apply(source)).thenReturn(null);
+        when(operatorMatcher.apply(source)).thenReturn(Option.none());
 
         Parser<Expression> lowerLevelParser = mock(Parser.class);
         when(lowerLevelParser.apply(source)).thenReturn(firstExpression);
@@ -51,7 +50,7 @@ public class ExpressionCollectorSpecification {
         TokenSource source = Generate.any(TokenSource.class);
 
         TokenMatcher operatorMatcher = mock(TokenMatcher.class);
-        when(operatorMatcher.apply(source)).thenReturn(operator).thenReturn(null);
+        when(operatorMatcher.apply(source)).thenReturn(Option.some(operator)).thenReturn(Option.none());
 
         Parser<Expression> lowerLevelParser = mock(Parser.class);
         when(lowerLevelParser.apply(source)).thenReturn(firstExpression).thenReturn(secondExpression);
@@ -90,11 +89,11 @@ public class ExpressionCollectorSpecification {
 
         TokenMatcher operatorMatcher = mock(TokenMatcher.class);
 
-        OngoingStubbing<Operator> operatorStubbing = when(operatorMatcher.apply(source));
+        OngoingStubbing<Option<Operator>> operatorStubbing = when(operatorMatcher.apply(source));
         for (Operator operator : expectedOperators) {
-            operatorStubbing = operatorStubbing.thenReturn(operator);
+            operatorStubbing = operatorStubbing.thenReturn(Option.some(operator));
         }
-        operatorStubbing.thenReturn(null);
+        operatorStubbing.thenReturn(Option.none());
 
         Parser<Expression> lowerLevelParser = mock(Parser.class);
         OngoingStubbing<Expression> expressionStubbing = when(lowerLevelParser.apply(source)).thenReturn(firstExpression);

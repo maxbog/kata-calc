@@ -3,6 +3,7 @@ package calc.parser;
 import calc.TokenSource;
 import calc.ast.BinaryExpressionFactory;
 import calc.ast.Expression;
+import fj.data.Option;
 
 /**
  * Copyright 2016 Maksymilian Boguń.
@@ -24,12 +25,9 @@ public class LeftAssociativeExpressionParser {
         return result;
     }
 
-    public Expression parseLeftAssociativeExpressionList(TokenSource source) {
-
-        ExpressionList operations = expressionCollector.collectExpressions(source);
-        if(operations == null)
-            return null;
-        return leftAssociativeCombine(operations);
+    public Option<Expression> parseLeftAssociativeExpressionList(TokenSource source) {
+        return expressionCollector.collectExpressions(source)
+                .map(this::leftAssociativeCombine);
     }
 }
 
